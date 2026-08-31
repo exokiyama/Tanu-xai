@@ -8,7 +8,7 @@ const plugin: CommandPlugin = {
   usage: '.menu',
   aliases: ['help'],
   execute: async (ctx) => {
-    const menu = `╭━━━『 🩷 ${config.botName} 』━━━╮
+    const menu = `╭━━━『  ${config.botName} 』━━━╮
 ┃
 ┃ 👑 OWNER
 ┃   • .setprefix <symbol>
@@ -72,12 +72,12 @@ const plugin: CommandPlugin = {
 ┃
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 
-🩷 Tanu XAI V1
+ Tanu XAI V1
 Mode: Public
 Prefix: ${config.prefix}
 `;
 
-    await ctx.sock.sendMessage(ctx.chat, { text: menu }, { quoted: ctx.message });
+    await ctx.sock.sendMessage(ctx.chat, { text: menu });
   }
 };
 

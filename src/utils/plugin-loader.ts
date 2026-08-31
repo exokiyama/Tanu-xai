@@ -45,7 +45,7 @@ class PluginLoader {
             const module = await import(fullPath);
             const plugin: CommandPlugin = module.default;
 
-            if (plugin && plugin.name && plugin.execute) {
+            if (plugin && plugin.name && typeof plugin.execute === 'function') {
               this.registerCommand(plugin);
             }
           } catch (error: any) {

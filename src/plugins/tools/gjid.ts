@@ -8,9 +8,9 @@ const plugin: CommandPlugin = {
   aliases: ['groupjid'],
   groupOnly: true,
   execute: async (ctx) => {
-    await ctx.sock.sendMessage(ctx.chat, { 
-      text: `🆔 GROUP JID\n\n${ctx.chat}` 
-    }, { quoted: ctx.message });
+    await ctx.sock.sendMessage(ctx.chat, {
+      text: `🆔 GROUP JID\n\n${ctx.chat}`
+    });
   }
 };
 

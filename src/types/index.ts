@@ -1,4 +1,4 @@
-import { proto, WASocket } from '@whiskeysockets/baileys';
+import { proto, WASocket } from 'baileys';
 
 export interface MessageContext {
   sock: WASocket;
