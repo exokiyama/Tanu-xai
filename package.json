@@ -21,7 +21,7 @@
     "@hapi/boom": "^10.0.1",
     "@supabase/supabase-js": "^2.109.0",
     "@types/node": "^26.4.0",
-    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "baileys": "^7.0.0-rc14",
     "dotenv": "^17.4.2",
     "node-cache": "^5.1.2",
     "pino": "^10.3.1"
