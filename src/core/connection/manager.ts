@@ -1,4 +1,4 @@
-import { proto, WASocket, DisconnectReason, AuthenticationState, makeCacheableSignalKeyStore } from 'baileys';
+import { proto, WASocket, DisconnectReason, AuthenticationState, makeCacheableSignalKeyStore } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
 import { config } from '../config/index.js';
@@ -69,7 +69,13 @@ export class ConnectionManager {
     this.setState('CONNECTING');
 
     try {
-      const { default: makeWASocket } = await import('baileys');
+     import {
+  makeWASocket,
+  DisconnectReason,
+  makeCacheableSignalKeyStore,
+  type WASocket,
+  type AuthenticationState,
+} from '@whiskeysockets/baileys';
 
       this.sock = makeWASocket({
         auth: this.authState!,
