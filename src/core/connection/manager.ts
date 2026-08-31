@@ -1,9 +1,10 @@
-import { makeInMemoryStore, proto, WASocket, DisconnectReason, AuthenticationState, useMultiFileAuthState, makeCacheableSignalKeyStore } from '@whiskeysockets/baileys';
+import { proto, WASocket, DisconnectReason, AuthenticationState, makeCacheableSignalKeyStore } from 'baileys';
 import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
 import { config } from '../config/index.js';
 import { createModuleLogger } from '../logger/index.js';
 import { ConnectionStateValue } from '../../types/index.js';
+import { handleMessages } from '../../handlers/commands.js';
 
 const log = createModuleLogger('WA');
 
@@ -17,12 +18,9 @@ export class ConnectionManager {
   private baseDelay = 1000;
   private maxDelay = 60000;
   private isReconnecting = false;
-  private store: ReturnType<typeof makeInMemoryStore>;
   private authState: AuthenticationState | null = null;
 
-  constructor() {
-    this.store = makeInMemoryStore({ logger: undefined });
-  }
+  constructor() {}
 
   async initialize(): Promise<void> {
     if (this.state === 'INITIALIZING' || this.state === 'CONNECTING') {
@@ -45,7 +43,7 @@ export class ConnectionManager {
       this.authState = {
         creds,
         keys: makeCacheableSignalKeyStore(
-          creds.keys as any,
+          (creds as any).keys || {},
           undefined
         )
       };
@@ -71,7 +69,7 @@ export class ConnectionManager {
     this.setState('CONNECTING');
 
     try {
-      const { default: makeWASocket } = await import('@whiskeysockets/baileys');
+      const { default: makeWASocket } = await import('baileys');
 
       this.sock = makeWASocket({
         auth: this.authState!,
@@ -85,8 +83,6 @@ export class ConnectionManager {
         logger: undefined,
         syncFullHistory: false
       });
-
-      this.store.bind(this.sock.ev);
 
       this.setupEventHandlers();
 
@@ -132,12 +128,11 @@ export class ConnectionManager {
 
     this.sock.ev.on('creds.update', (creds) => {
       if (this.authState) {
-        this.authState.creds = creds;
+        this.authState.creds = creds as AuthenticationCreds;
       }
     });
 
     this.sock.ev.on('messages.upsert', async (m) => {
-      const { handleMessages } = await import('../../handlers/messages.js');
       await handleMessages(m, this.sock!);
     });
   }

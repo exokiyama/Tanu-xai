@@ -8,14 +8,12 @@ const plugin: CommandPlugin = {
   aliases: [],
   execute: async (ctx) => {
     const start = Date.now();
-    const msg = await ctx.sock.sendMessage(ctx.chat, { text: '🏓 PING' }, { quoted: ctx.message });
+    const sentMsg = await ctx.sock.sendMessage(ctx.chat, { text: '🏓 PING' });
     const ping = Date.now() - start;
-    
-    if (msg.key.id) {
-      await ctx.sock.sendMessage(ctx.chat, { 
-        text: `🏓 PONG\n\nLatency: ${ping} ms` 
-      }, { quoted: msg });
-    }
+
+    await ctx.sock.sendMessage(ctx.chat, {
+      text: `🏓 PONG\n\nLatency: ${ping} ms`
+    });
   }
 };
 

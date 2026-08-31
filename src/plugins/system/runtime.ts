@@ -14,10 +14,10 @@ const plugin: CommandPlugin = {
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     const runtime = `⏱️ TANU XAI RUNTIME\n\nDays: ${days}\nHours: ${hours % 24}\nMinutes: ${minutes % 60}\nSeconds: ${seconds % 60}`;
-    
-    await ctx.sock.sendMessage(ctx.chat, { text: runtime }, { quoted: ctx.message });
+
+    await ctx.sock.sendMessage(ctx.chat, { text: runtime });
   }
 };
 

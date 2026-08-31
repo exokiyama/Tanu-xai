@@ -7,9 +7,9 @@ const plugin: CommandPlugin = {
   usage: '.jid',
   aliases: [],
   execute: async (ctx) => {
-    await ctx.sock.sendMessage(ctx.chat, { 
-      text: `🆔 CHAT JID\n\n${ctx.chat}` 
-    }, { quoted: ctx.message });
+    await ctx.sock.sendMessage(ctx.chat, {
+      text: `🆔 CHAT JID\n\n${ctx.chat}`
+    });
   }
 };
 

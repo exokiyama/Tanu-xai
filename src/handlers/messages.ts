@@ -1,13 +1,14 @@
-import { proto, WASocket } from '@whiskeysockets/baileys';
+import { proto, WASocket } from 'baileys';
 import { MessageContext } from '../types/index.js';
 import { permissions } from '../core/permissions/index.js';
 import { config, normalizePhoneNumber } from '../core/config/index.js';
 
 export function normalizeMessage(msg: proto.IWebMessageInfo): Partial<MessageContext> {
-  const chatId = msg.key.remoteJid || '';
-  const senderId = msg.key.participant || msg.key.remoteJid || '';
+  const key = msg.key!;
+  const chatId = key.remoteJid || '';
+  const senderId = key.participant || key.remoteJid || '';
   const isGroup = chatId.endsWith('@g.us');
-
+  
   return {
     chat: chatId,
     sender: normalizePhoneNumber(senderId.replace(/:\d+$/, '')),
@@ -16,13 +17,13 @@ export function normalizeMessage(msg: proto.IWebMessageInfo): Partial<MessageCon
 }
 
 export function extractQuotedMessage(msg: proto.IWebMessageInfo): proto.IWebMessageInfo | undefined {
-  return msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
-    ? {
-        key: msg.message.extendedTextMessage.contextInfo.quotedMessage.key || {},
-        message: msg.message.extendedTextMessage.contextInfo.quotedMessage,
-        ...msg.message.extendedTextMessage.contextInfo
-      } as proto.IWebMessageInfo
-    : undefined;
+  const quotedMsg = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+  if (!quotedMsg) return undefined;
+  
+  return {
+    message: quotedMsg,
+    ...msg.message.extendedTextMessage?.contextInfo
+  } as proto.IWebMessageInfo;
 }
 
 export function extractMentions(msg: proto.IWebMessageInfo): string[] {
@@ -61,7 +62,10 @@ export async function buildMessageContext(
   if (normalized.isGroup) {
     try {
       const groupMetadata = await sock.groupMetadata(normalized.chat);
-      isAdmin = groupMetadata.participants.some(p => p.id === msg.key.participant && p.admin !== null);
+      const participant = msg.key?.participant || msg.key?.remoteJid;
+      if (participant) {
+        isAdmin = groupMetadata.participants.some(p => p.id === participant && p.admin !== null);
+      }
       isBotAdmin = groupMetadata.participants.some(p => p.id === sock.user?.id && p.admin !== null);
     } catch (error) {
       console.error('[HANDLER] Failed to get group metadata', error);
@@ -83,7 +87,7 @@ export async function buildMessageContext(
     sock,
     sender: normalized.sender,
     chat: normalized.chat,
-    isGroup: normalized.isGroup,
+    isGroup: !!normalized.isGroup,
     isOwner,
     isSudo,
     isAdmin,
@@ -98,7 +102,10 @@ export async function buildMessageContext(
 }
 
 export function shouldProcessMessage(msg: proto.IWebMessageInfo): boolean {
-  if (msg.key.fromMe) {
+  const key = msg.key;
+  if (!key) return false;
+  
+  if (key.fromMe) {
     return false;
   }
 

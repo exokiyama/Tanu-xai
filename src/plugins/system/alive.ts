@@ -14,18 +14,12 @@ const plugin: CommandPlugin = {
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     const uptime = `Days: ${days}\nHours: ${hours % 24}\nMinutes: ${minutes % 60}\nSeconds: ${seconds % 60}`;
-    
-    const pingStart = Date.now();
-    const msg = await ctx.sock.sendMessage(ctx.chat, { text: '🏓 PING' }, { quoted: ctx.message });
-    const ping = Date.now() - pingStart;
-    
-    if (msg.key.id) {
-      await ctx.sock.sendMessage(ctx.chat, { 
-        text: `🩷 TANU XAI\n\nStatus: Online 🟢\nUptime: ${uptime}\nPing: ${ping} ms\nMode: Public\nVersion: V1` 
-      }, { quoted: msg });
-    }
+
+    await ctx.sock.sendMessage(ctx.chat, {
+      text: ` TANU XAI\n\nStatus: Online 🟢\nUptime: ${uptime}\nMode: Public\nVersion: V1`
+    });
   }
 };
 

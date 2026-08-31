@@ -1,4 +1,4 @@
-import { proto, WASocket } from '@whiskeysockets/baileys';
+import { proto, WASocket } from 'baileys';
 import { buildMessageContext, shouldProcessMessage } from './messages.js';
 import { pluginLoader } from '../utils/plugin-loader.js';
 import { config } from '../core/config/index.js';
@@ -36,33 +36,29 @@ export async function handleMessages(
 
       if (plugin.ownerOnly && !ctx.isOwner) {
         await sock.sendMessage(ctx.chat, { 
-          text: '❌ Owner only command',
-          quoted: msg
-        });
+          text: '❌ Owner only command'
+        }, { quoted: msg });
         continue;
       }
 
       if (plugin.sudoOnly && !ctx.isSudo && !ctx.isOwner) {
         await sock.sendMessage(ctx.chat, {
-          text: '❌ Sudo only command',
-          quoted: msg
-        });
+          text: '❌ Sudo only command'
+        }, { quoted: msg });
         continue;
       }
 
       if (plugin.groupOnly && !ctx.isGroup) {
         await sock.sendMessage(ctx.chat, {
-          text: '❌ Group only command',
-          quoted: msg
-        });
+          text: '❌ Group only command'
+        }, { quoted: msg });
         continue;
       }
 
       if (plugin.botAdminRequired && !ctx.isBotAdmin) {
         await sock.sendMessage(ctx.chat, {
-          text: '❌ Bot must be admin',
-          quoted: msg
-        });
+          text: '❌ Bot must be admin'
+        }, { quoted: msg });
         continue;
       }
 
@@ -76,9 +72,8 @@ export async function handleMessages(
           chat: ctx.chat
         });
         await sock.sendMessage(ctx.chat, {
-          text: `❌ Error: ${error.message}`,
-          quoted: msg
-        });
+          text: `❌ Error: ${error.message}`
+        }, { quoted: msg });
       }
     } catch (error: any) {
       log.error('Message handling error', { error: error.message });
