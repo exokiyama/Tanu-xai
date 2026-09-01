@@ -3,6 +3,7 @@ import { showMenu, showOwners } from './handlers/menu.js';
 import { getSettings, updateSettings } from './handlers/settings.js';
 import { addSudo, removeSudo, listSudo } from './permissions/sudo.js';
 import type { CommandContext } from './types.js';
+import './command-catalog.js';
 const reply = (text: string | ((ctx: CommandContext) => string)) => async (ctx: CommandContext) => { await ctx.sock.sendMessage(ctx.chat, { text: typeof text === 'function' ? text(ctx) : text }); };
 const owner = (name: string, description: string, handler: (ctx: CommandContext) => Promise<void>) => register({ name, category: 'owner', description, ownerOnly: true, handler });
 register({ name: 'menu', aliases: ['help'], category: 'tools', description: 'Show category menu', handler: showMenu });

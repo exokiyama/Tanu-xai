@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node index.js",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint Tanu/**/*.ts lib/**/*.ts db/**/*.ts"
+    "test": "npm run build && node test/smoke.mjs",
+    "lint": "find Tanu db lib plugins -type f -name '*.ts' -print0 | xargs -0 eslint"
   },
   "keywords": [
     "whatsapp",
