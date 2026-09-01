@@ -1,0 +1,7 @@
+import 'dotenv/config';
+import { PERMANENT_OWNERS } from './types.js';
+const number = (value: string | undefined, fallback: string) => (value ?? fallback).replace(/\D/g, '');
+export const config = { nodeEnv: process.env.NODE_ENV ?? 'production', sessionId: process.env.SESSION_ID ?? '', ownerNumber: number(process.env.OWNER_NUMBER, PERMANENT_OWNERS[0].number), wifeNumber: number(process.env.OWNER_WIFE_NUMBER, PERMANENT_OWNERS[1].number), botName: process.env.BOT_NAME ?? 'Tanu XAI', prefix: process.env.PREFIX ?? '.', mode: process.env.BOT_MODE === 'private' ? 'private' as const : 'public' as const, watermark: process.env.WATERMARK ?? 'Made by Arman HTX', packname: process.env.STICKER_PACKNAME ?? 'Tanu XAI', author: process.env.STICKER_AUTHOR ?? 'Arman HTX', supabaseUrl: process.env.SUPABASE_URL ?? '', supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '', maxReconnectAttempts: Number(process.env.MAX_RECONNECT_ATTEMPTS ?? 10), dailyReportEnabled: process.env.DAILY_REPORT_ENABLED === 'true' };
+export function validateConfig(): void { if (!config.sessionId) throw new Error('SESSION_ID is required'); if (!config.sessionId.startsWith('Tanu-XAI~')) throw new Error('SESSION_ID must start with Tanu-XAI~'); if (!config.prefix || config.prefix.length > 3) throw new Error('PREFIX must be 1-3 characters'); }
+export const normalizeJid = (jid: string) => jid.replace(/:\d+(?=@)/, '').toLowerCase();
+export const phoneFromJid = (jid: string) => normalizeJid(jid).split('@')[0];

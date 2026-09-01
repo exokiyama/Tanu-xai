@@ -1,0 +1,5 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { config } from '../../Tanu/config.js';
+import { logger } from '../../Tanu/utils/logger.js';
+export class Database { private client: SupabaseClient | null = null; private available = false; async connect(): Promise<boolean> { if (!config.supabaseUrl || !config.supabaseKey) { logger.warn('DB', 'Supabase not configured; using memory-safe operation'); return false; } try { this.client = createClient(config.supabaseUrl, config.supabaseKey); const { error } = await this.client.from('bot_settings').select('key').limit(1); if (error) throw error; this.available = true; logger.info('DB', 'Supabase connected'); return true; } catch (error) { this.available = false; logger.error('DB', 'Supabase unavailable; bot will continue', { error: error instanceof Error ? error.message : String(error) }); return false; } } get api() { return this.client; } isAvailable() { return this.available; } async disconnect() { this.client = null; this.available = false; } }
+export const db = new Database();

@@ -1,0 +1,3 @@
+type Meta = Record<string, unknown>;
+const emit = (level: string, scope: string, message: string, meta?: Meta) => console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log'](JSON.stringify({ time: new Date().toISOString(), level, scope, message, ...(meta ? { meta } : {}) }));
+export const logger = { info: (scope: string, message: string, meta?: Meta) => emit('info', scope, message, meta), warn: (scope: string, message: string, meta?: Meta) => emit('warn', scope, message, meta), error: (scope: string, message: string, meta?: Meta) => emit('error', scope, message, meta), debug: (scope: string, message: string, meta?: Meta) => process.env.LOG_LEVEL === 'debug' && emit('debug', scope, message, meta) };
