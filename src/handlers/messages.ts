@@ -1,4 +1,4 @@
-import { proto, WASocket } from 'baileys';
+import { proto, WASocket } from '@whiskeysockets/baileys';
 import { MessageContext } from '../types/index.js';
 import { permissions } from '../core/permissions/index.js';
 import { config, normalizePhoneNumber } from '../core/config/index.js';
@@ -22,13 +22,13 @@ export function extractQuotedMessage(msg: proto.IWebMessageInfo): proto.IWebMess
   
   return {
     message: quotedMsg,
-    ...msg.message.extendedTextMessage?.contextInfo
+    ...msg.message?.extendedTextMessage?.contextInfo
   } as proto.IWebMessageInfo;
 }
 
 export function extractMentions(msg: proto.IWebMessageInfo): string[] {
   const mentions = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  return mentions.map(jid => normalizePhoneNumber(jid.replace(/@\w+\.\w+$/, '')));
+  return mentions.map((jid: string) => normalizePhoneNumber(jid.replace(/@\w+\.\w+$/, '')));
 }
 
 export function extractText(msg: proto.IWebMessageInfo): string {
@@ -64,9 +64,9 @@ export async function buildMessageContext(
       const groupMetadata = await sock.groupMetadata(normalized.chat);
       const participant = msg.key?.participant || msg.key?.remoteJid;
       if (participant) {
-        isAdmin = groupMetadata.participants.some(p => p.id === participant && p.admin !== null);
+        isAdmin = groupMetadata.participants.some((p: any) => p.id === participant && p.admin !== null);
       }
-      isBotAdmin = groupMetadata.participants.some(p => p.id === sock.user?.id && p.admin !== null);
+      isBotAdmin = groupMetadata.participants.some((p: any) => p.id === sock.user?.id && p.admin !== null);
     } catch (error) {
       console.error('[HANDLER] Failed to get group metadata', error);
     }

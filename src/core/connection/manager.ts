@@ -1,4 +1,12 @@
-import { proto, WASocket, DisconnectReason, AuthenticationState, makeCacheableSignalKeyStore } from '@whiskeysockets/baileys';
+import {
+  makeWASocket,
+  DisconnectReason,
+  makeCacheableSignalKeyStore,
+  type WASocket,
+  type AuthenticationState,
+  type proto,
+  type AuthenticationCreds,
+} from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import NodeCache from 'node-cache';
 import { config } from '../config/index.js';
@@ -69,16 +77,12 @@ export class ConnectionManager {
     this.setState('CONNECTING');
 
     try {
-     import {
-  makeWASocket,
-  DisconnectReason,
-  makeCacheableSignalKeyStore,
-  type WASocket,
-  type AuthenticationState,
-} from '@whiskeysockets/baileys';
+      if (!this.authState) {
+        throw new Error('Authentication state not initialized');
+      }
 
       this.sock = makeWASocket({
-        auth: this.authState!,
+        auth: this.authState,
         printQRInTerminal: false,
         browser: ['Tanu XAI', 'Chrome', '120.0.0'],
         markOnlineOnConnect: true,

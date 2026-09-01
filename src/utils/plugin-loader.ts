@@ -40,7 +40,14 @@ class PluginLoader {
 
         if (entry.isDirectory()) {
           await this.loadDirectory(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith('.js') && !entry.name.startsWith('.')) {
+        } else if (entry.isFile() && !entry.name.startsWith('.')) {
+          // Support both .ts (development) and .js (production) files
+          const isPluginFile = entry.name.endsWith('.ts') || (entry.name.endsWith('.js') && !entry.name.endsWith('.d.ts'));
+          
+          if (!isPluginFile) {
+            continue;
+          }
+
           try {
             const module = await import(fullPath);
             const plugin: CommandPlugin = module.default;
