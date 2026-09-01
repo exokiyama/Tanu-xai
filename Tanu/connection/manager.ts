@@ -6,6 +6,7 @@ import { logger } from '../utils/logger.js';
 import { loadSession } from './auth.js';
 import { handleMessages } from '../handlers/messages.js';
 import { eventStore } from '../cache/events.js';
+import { getMessage } from '../cache/message-store.js';
 
 export type ConnectionState = 'IDLE' | 'INITIALIZING' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'LOGGED_OUT';
 export class ConnectionManager {
@@ -20,7 +21,7 @@ export class ConnectionManager {
     this.shuttingDown = false; this.state = 'INITIALIZING';
     try {
       const auth = loadSession(); this.state = 'CONNECTING';
-      const socket = makeWASocket({ auth, browser: ['Tanu XAI', 'Chrome', '120.0.0'], markOnlineOnConnect: true, syncFullHistory: false, msgRetryCounterCache: this.retryCache, logger: undefined });
+      const socket = makeWASocket({ auth, browser: ['Tanu XAI', 'Chrome', '120.0.0'], markOnlineOnConnect: true, syncFullHistory: true, getMessage, msgRetryCounterCache: this.retryCache, logger: undefined });
       this.socket = socket;
       socket.ev.on('creds.update', creds => { void auth.saveCreds(creds); logger.debug('WA', 'Credentials updated locally; sensitive values omitted'); });
       socket.ev.on('connection.update', update => void this.onUpdate(update));

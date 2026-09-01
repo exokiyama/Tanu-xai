@@ -1,0 +1,4 @@
+export interface ReportEmailConfig { to: string; host?: string; port?: number; user?: string; password?: string; }
+export interface ReportEmailProvider { send(subject: string, body: string, config: ReportEmailConfig): Promise<void>; }
+export class UnconfiguredEmailProvider implements ReportEmailProvider { async send(_subject: string, _body: string, _config: ReportEmailConfig) { throw new Error('Report email provider is not configured'); } }
+export async function sendReport(body: string, recipient: string): Promise<{ sent: boolean; reason?: string }> { if (!recipient) return { sent: false, reason: 'REPORT_EMAIL_TO is not configured' }; try { await new UnconfiguredEmailProvider().send('Tanu XAI Daily Report', body, { to: recipient }); return { sent: true }; } catch (error) { return { sent: false, reason: error instanceof Error ? error.message : String(error) }; } }

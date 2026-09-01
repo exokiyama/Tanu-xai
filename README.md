@@ -56,3 +56,11 @@ npm run lint
 ```
 
 The smoke test covers TTL eviction, permanent-owner authorization, event retention, and report rendering. The installed Baileys version is `7.0.0-rc14`. Supported event declarations were verified against its installed type/runtime files. 
+
+## V2.2 implementation notes
+
+The current-state audit and implementation plan are recorded in [AUDIT_V2_2.md](AUDIT_V2_2.md). Normal WhatsApp operation requires no database. The optional `NullDatabaseAdapter` disables RPG/report persistence safely; PostgreSQL-compatible persistence can be added behind the `DatabaseAdapter` interface. Authentication remains local `SESSION_ID` plus ignored `auth/` storage and is never written to the economy/report database.
+
+Protection commands share one grammar: `.antivv off`, `.antivv g`, `.antivv p`, `.antivv <jid>`, with optional `pm`/`gm` scopes. The same parser is used for anti-delete, anti-edit, anti-revoke, and related protection settings. `.getjids` uses cached group metadata, `.fullpp` requests the highest profile-picture resolution exposed by Baileys, `.repo` shows the configured repository, and owner-only `.haxtan` generates a fresh report and attempts email delivery. Report triggers are excluded from the public menu.
+
+The report email boundary is intentionally unconfigured unless a real provider is supplied. The scheduler provides asynchronous, deduplicated, default-off execution; it does not claim email delivery without SMTP/provider credentials. The referenced owner-card video was not present in the repository or uploaded files, so it was not invented or bundled.

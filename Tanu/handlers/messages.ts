@@ -5,11 +5,13 @@ import { isOwner } from '../permissions/owner.js';
 import { isSudo } from '../permissions/sudo.js';
 import { getGroupMetadata } from '../cache/groups.js';
 import { eventStore, messageId } from '../cache/events.js';
+import { rememberMessage } from '../cache/message-store.js';
 const textOf = (message: proto.IWebMessageInfo) => message.message?.conversation ?? message.message?.extendedTextMessage?.text ?? message.message?.imageMessage?.caption ?? message.message?.videoMessage?.caption ?? '';
 const quotedOf = (message: proto.IWebMessageInfo) => { const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage; return quoted ? ({ message: quoted } as proto.IWebMessageInfo) : undefined; };
 export async function handleMessages(upsert: { messages: proto.IWebMessageInfo[]; type: string }, sock: WASocket) {
   for (const message of upsert.messages) {
     if (message.key?.fromMe || message.key?.remoteJid === 'status@broadcast' || !message.message) continue;
+    rememberMessage(message);
     const text = textOf(message).trim(); const chat = message.key?.remoteJid ?? ''; const sender = message.key?.participant ?? chat;
     const mediaType = message.message.imageMessage ? 'image' : message.message.videoMessage ? 'video' : message.message.audioMessage ? 'audio' : message.message.documentMessage ? 'document' : message.message.stickerMessage ? 'sticker' : undefined;
     eventStore.add({ id: messageId(message), chat, sender, timestamp: (Number(message.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000, kind: 'message', text, mediaType });
