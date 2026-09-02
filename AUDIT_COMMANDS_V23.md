@@ -1,8 +1,8 @@
 # V2.3 Command Audit
 
 - Registered commands: 261
-- Enabled/reachable handlers: 88
-- Intentionally provider-dependent commands: 173
+- Enabled/reachable handlers: 94
+- Intentionally provider-dependent commands: 167
 - Duplicate command names: none
 - Conflicting aliases: none
 - Invalid metadata/handlers/usage: 0

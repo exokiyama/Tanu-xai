@@ -20,6 +20,7 @@ session/
 sessions/
 credentials/
 *.session
+data/
 
 # Editor/IDE files
 .vscode/
