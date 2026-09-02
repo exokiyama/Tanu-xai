@@ -2,7 +2,7 @@ import type { CommandContext, CommandDefinition, Category } from '../types.js';
 import { logger } from '../utils/logger.js';
 const registry = new Map<string, CommandDefinition>();
 const cooldowns = new Map<string, number>();
-export function register(command: CommandDefinition) { registry.set(command.name, command); for (const alias of command.aliases ?? []) registry.set(alias, command); }
+export function register(command: CommandDefinition) { const normalized = { ...command, usage: command.usage ?? `.${command.name}` }; registry.set(command.name, normalized); for (const alias of command.aliases ?? []) registry.set(alias, normalized); }
 export function getCommand(name: string) { return registry.get(name.toLowerCase()); }
 export function allCommands() { return [...new Set(registry.values())]; }
 export function categoryCommands(category: Category) { return allCommands().filter(command => command.category === category); }

@@ -14,7 +14,7 @@ The active runtime is TypeScript under `Tanu/`, with Baileys connection/auth, me
 
 ## Commands and menu
 
-The runtime registers 260 commands. The executable audit reports no duplicate names, invalid handlers, or missing metadata. Local handlers include repository information, owner card, profile picture lookup, group JID listing, protection grammar, mode/settings commands, and `.haxtan`. Daily-report triggers and forbidden script/support/version entries are excluded from the public menu. Provider-dependent features remain clearly bounded rather than falsely advertised as functional.
+The runtime registers 261 commands. The executable audit reports no duplicate names, invalid handlers, or missing metadata. Local handlers include repository information, owner card, profile picture lookup, group JID listing, protection grammar, mode/settings commands, and `.haxtan`. Daily-report triggers and forbidden script/support/version entries are excluded from the public menu. Provider-dependent features remain clearly bounded rather than falsely advertised as functional.
 
 ## Reports
 
