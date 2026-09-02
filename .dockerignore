@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.env
+.env.*
+auth
+auth_info_baileys
+session
+sessions
+credentials
+data
+*.session
+npm-debug.log

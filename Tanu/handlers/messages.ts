@@ -14,7 +14,8 @@ export async function handleMessages(upsert: { messages: proto.IWebMessageInfo[]
     rememberMessage(message);
     const text = textOf(message).trim(); const chat = message.key?.remoteJid ?? ''; const sender = message.key?.participant ?? chat;
     const mediaType = message.message.imageMessage ? 'image' : message.message.videoMessage ? 'video' : message.message.audioMessage ? 'audio' : message.message.documentMessage ? 'document' : message.message.stickerMessage ? 'sticker' : undefined;
-    eventStore.add({ id: messageId(message), chat, sender, timestamp: (Number(message.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000, kind: 'message', text, mediaType });
+    const viewOnce = Boolean(message.message.viewOnceMessage || message.message.viewOnceMessageV2 || message.message.viewOnceMessageV2Extension);
+    eventStore.add({ id: messageId(message), chat, sender, timestamp: (Number(message.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000, kind: viewOnce ? 'view-once' : 'message', text, mediaType, fromMe: Boolean(message.key?.fromMe), isGroup: chat.endsWith('@g.us'), viewOnce, quoted: Boolean(message.message.extendedTextMessage?.contextInfo?.quotedMessage) });
     const prefix = getSettings().prefix; if (!text.startsWith(prefix)) continue;
     const parts = text.slice(prefix.length).trim().split(/\s+/); const command = (parts.shift() ?? '').toLowerCase(); if (!command) continue;
     let isAdmin = false; let isBotAdmin = false; const isGroup = chat.endsWith('@g.us');

@@ -7,6 +7,7 @@ import { loadSession } from './auth.js';
 import { handleMessages } from '../handlers/messages.js';
 import { eventStore } from '../cache/events.js';
 import { getMessage } from '../cache/message-store.js';
+import { getGroupMetadata, invalidateGroupMetadata } from '../cache/groups.js';
 
 export type ConnectionState = 'IDLE' | 'INITIALIZING' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'LOGGED_OUT';
 export class ConnectionManager {
@@ -21,12 +22,16 @@ export class ConnectionManager {
     this.shuttingDown = false; this.state = 'INITIALIZING';
     try {
       const auth = loadSession(); this.state = 'CONNECTING';
-      const socket = makeWASocket({ auth, browser: ['Tanu XAI', 'Chrome', '120.0.0'], markOnlineOnConnect: true, syncFullHistory: true, getMessage, msgRetryCounterCache: this.retryCache, logger: undefined });
+      let activeSocket!: WASocket;
+      const socket = makeWASocket({ auth, browser: ['Tanu XAI', 'Chrome', '120.0.0'], markOnlineOnConnect: true, syncFullHistory: true, cachedGroupMetadata: async jid => getGroupMetadata(activeSocket, jid), getMessage, msgRetryCounterCache: this.retryCache, logger: undefined });
+      activeSocket = socket;
       this.socket = socket;
       socket.ev.on('creds.update', creds => { void auth.saveCreds(creds); logger.debug('WA', 'Credentials updated locally; sensitive values omitted'); });
       socket.ev.on('connection.update', update => void this.onUpdate(update));
       socket.ev.on('messages.upsert', messages => void handleMessages(messages, socket));
       socket.ev.on('messages.update', updates => { for (const item of updates) { const id = item.key.id; if (!id) continue; const text = item.update.message?.conversation ?? item.update.message?.extendedTextMessage?.text; if (text) eventStore.markEdited(id, text); else eventStore.markDeleted(id); } });
+      socket.ev.on('groups.update', updates => { for (const update of updates) if (update.id) invalidateGroupMetadata(update.id); });
+      socket.ev.on('group-participants.update', update => invalidateGroupMetadata(update.id));
       logger.info('WA', 'Socket initialized');
     } catch (error) { this.socket = null; this.state = 'DISCONNECTED'; logger.error('WA', 'Connection initialization failed', { error: error instanceof Error ? error.message : String(error) }); this.scheduleReconnect(); }
   }

@@ -35,7 +35,7 @@ The connection manager uses the current `makeWASocket` API, prevents duplicate s
 
 ## Known limitations
 
-Interactive WhatsApp carousel/button support varies by Baileys and WhatsApp version, so menus and owner cards use reliable text fallbacks. Settings and sudo persistence become durable once Supabase persistence methods are connected. AI, downloaders, search, reactions, media conversion, email, and external plugins require configured provider implementations; this build does not fake those integrations.
+Interactive WhatsApp carousel/button support varies by Baileys and WhatsApp version, so menus and owner cards use reliable text fallbacks. Settings and sudo state are memory-first and can be persisted through the optional database adapter. AI, downloaders, search, reactions, media conversion, email, and external plugins require configured provider implementations; this build does not fake those integrations.
 
 ## V2.1 audit and feature boundaries
 
@@ -64,3 +64,22 @@ The current-state audit and implementation plan are recorded in [AUDIT_V2_2.md](
 Protection commands share one grammar: `.antivv off`, `.antivv g`, `.antivv p`, `.antivv <jid>`, with optional `pm`/`gm` scopes. The same parser is used for anti-delete, anti-edit, anti-revoke, and related protection settings. `.getjids` uses cached group metadata, `.fullpp` requests the highest profile-picture resolution exposed by Baileys, `.repo` shows the configured repository, and owner-only `.haxtan` generates a fresh report and attempts email delivery. Report triggers are excluded from the public menu.
 
 The report email boundary is intentionally unconfigured unless a real provider is supplied. The scheduler provides asynchronous, deduplicated, default-off execution; it does not claim email delivery without SMTP/provider credentials. The referenced owner-card video was not present in the repository or uploaded files, so it was not invented or bundled.
+
+## V2.3 database and deployment notes
+
+The application database is now provider-neutral. When `DATABASE_URL` begins with `postgres://` or `postgresql://`, the optional PostgreSQL adapter uses a small pool with keep-alive, SSL detection, and free-tier-friendly limits. When it is absent, the application uses local SQLite at `./data/tanu-xai.db` through Node's built-in SQLite API. If either provider cannot initialize, the null adapter disables persistence while the WhatsApp connection continues.
+
+Supabase is not required and is no longer part of the runtime database client. The only ordinary deployment secret required for authentication is `SESSION_ID`; trusted owner identities and reconnect limits remain application constants. On ephemeral hosting, configure a persistent `DATABASE_URL` and provide persistent auth/session storage appropriate to the hosting platform.
+
+The test suite includes a real SQLite write/read fallback check. WhatsApp account behavior, provider delivery, and live media operations remain marked as code-reviewed or not testable without a connected account rather than being falsely claimed as integration-tested.
+
+## V2.3 final audit and deployment
+
+The final audit is recorded in [AUDIT_V2_3.md](AUDIT_V2_3.md). Docker deployment is provided by `Dockerfile` and `.dockerignore`:
+
+```bash
+docker build -t tanu-xai .
+docker run --env-file .env tanu-xai
+```
+
+Set `DATABASE_URL=postgresql://...` for PostgreSQL persistence; otherwise local SQLite uses `./data/tanu-xai.db`. No Supabase account is required. On ephemeral hosting, use external persistent storage for `SESSION_ID`-derived auth state and PostgreSQL if durable RPG/report state is needed.

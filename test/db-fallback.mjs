@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { rm } from 'node:fs/promises';
+import { SQLiteDatabaseAdapter, NullDatabaseAdapter } from '../dist/db/database/adapter.js';
+const db = new SQLiteDatabaseAdapter('./data/smoke-tanu-xai.db');
+await db.upsert('users', { id: 'smoke', value: 'ok' });
+assert.deepEqual(await db.get('users', { id: 'smoke' }), { id: 'smoke', value: 'ok' });
+await db.close();
+const none = new NullDatabaseAdapter(); assert.equal(none.available, false);
+await rm('./data', { recursive: true, force: true });
+console.log('database fallback: ok');
