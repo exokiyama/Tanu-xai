@@ -7,7 +7,7 @@ if (missing.length) {
   process.exitCode = 1;
 } else {
   try {
-    await import('./dist/Tanu/index.js');
+    await import('./Tanu/index.js');
   } catch (error) {
     console.error('[BOOT] Startup failed:', error instanceof Error ? error.message : error);
     process.exitCode = 1;
