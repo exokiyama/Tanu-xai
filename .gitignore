@@ -2,46 +2,16 @@
 # Dependencies
 node_modules/
 
-# TypeScript
-*.tsbuildinfo
-dist/
-build/
+# Logs and temp files
+*.log
+*.tmp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Logs
-*.log
-
-# Editor
+# Editors
 .vscode/
 .idea/
-
-# Python (if any Python files exist in the project)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Temporary files
-*.tmp
-*.swp
-*.swo
-
-# OS specific
-.DS_Store
-Thumbs.db
-
-# Build outputs
-target/
-.gradle/
-.mypy_cache/
-.pytest_cache/
 ```
