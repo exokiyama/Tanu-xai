@@ -1,2 +1,0 @@
-import type { WASocket } from '@whiskeysockets/baileys';
-export async function groupPermissions(sock: WASocket, groupJid: string, sender: string): Promise<{ isAdmin: boolean; isBotAdmin: boolean }> { const metadata = await sock.groupMetadata(groupJid); const member = metadata.participants.find(item => item.id === sender); const bot = metadata.participants.find(item => item.id === sock.user?.id); return { isAdmin: Boolean(member?.admin), isBotAdmin: Boolean(bot?.admin) }; }
