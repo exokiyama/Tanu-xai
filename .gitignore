@@ -14,7 +14,7 @@ venv/
 .venv/
 .env
 .env.local
-*.env.*
+.env.*
 
 # Logs and temp files
 *.log
@@ -24,4 +24,13 @@ venv/
 # Editors
 .vscode/
 .idea/
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# OS
+.DS_Store
+Thumbs.db
 ```
