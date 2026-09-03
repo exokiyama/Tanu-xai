@@ -2,49 +2,43 @@
 # Dependencies
 node_modules/
 
-# Compiled/Generated files
-*.pyc
-__pycache__/
-*.o
-*.obj
-*.out
-*.class
-*.so
-*.dll
-*.exe
+# Logs and temp files
+*.log
+*.tmp
+*.swp
 
-# Build directories
-dist/
-build/
-target/
-
-# Virtual environments
-venv/
-.venv/
+# Environment
 .env
 .env.local
 *.env.*
 
-# Editor/IDE files
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
-# Logs
-*.log
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.env
+env/
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Coverage
+# Build outputs
+dist/
+build/
+target/
+out/
 coverage/
 htmlcov/
-.coverage
-
-# Python caches
-.mypy_cache/
+.nyc_output/
 .pytest_cache/
+.mypy_cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
