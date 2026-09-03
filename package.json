@@ -1,35 +1,35 @@
 {
-  "name": "tanu-xai",
+  "name": "tanu-whatsapp-bot",
   "version": "2.0.0",
-  "private": true,
-  "type": "module",
+  "description": "A production-ready, stable, and modular WhatsApp bot built with Node.js and Baileys.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test/smoke.mjs && node test/db-fallback.mjs && node test/command-audit.mjs",
-    "lint": "find lib plugins -type f -name '*.js' -print0 | xargs -0 eslint"
+    "lint": "eslint . --ext .js"
   },
-  "keywords": [
-    "whatsapp",
-    "bot",
-    "baileys"
-  ],
+  "keywords": ["whatsapp", "bot", "baileys"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@types/node": "^26.4.0",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.23.1",
     "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "axios": "^1.6.7",
+    "cheerio": "^1.0.0-rc.12",
     "dotenv": "^17.4.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "form-data": "^4.0.0",
+    "mime-types": "^2.1.35",
     "node-cache": "^5.1.2",
     "nodemailer": "^9.1.1",
     "pg": "^8.23.0",
-    "pino": "^10.3.1"
+    "pino": "^10.3.1",
+    "sharp": "^0.33.2",
+    "tesseract.js": "^5.0.4"
   },
   "devDependencies": {
     "eslint": "^8.57.1"
-  },
-  "description": "A production-ready, stable, and modular WhatsApp bot built with Node.js and Baileys."
+  }
 }
