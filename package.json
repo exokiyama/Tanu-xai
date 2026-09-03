@@ -5,12 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch Tanu/index.ts",
-    "build": "tsc",
     "start": "node index.js",
-    "typecheck": "tsc --noEmit",
-    "test": "npm run build && node test/smoke.mjs && node test/db-fallback.mjs && node test/command-audit.mjs",
-    "lint": "find Tanu db lib plugins -type f -name '*.ts' -print0 | xargs -0 eslint"
+    "test": "node test/smoke.mjs && node test/db-fallback.mjs && node test/command-audit.mjs",
+    "lint": "find lib plugins -type f -name '*.js' -print0 | xargs -0 eslint"
   },
   "keywords": [
     "whatsapp",
@@ -32,11 +29,7 @@
     "pino": "^10.3.1"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.57.1",
-    "tsx": "^4.23.13",
-    "typescript": "^5.9.3"
+    "eslint": "^8.57.1"
   },
-  "description": "A production-ready, stable, and modular WhatsApp bot built with Node.js, TypeScript, and Baileys."
+  "description": "A production-ready, stable, and modular WhatsApp bot built with Node.js and Baileys."
 }
