@@ -7,7 +7,8 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
-  Browsers
+  Browsers,
+  BufferJSON
 } = require('@whiskeysockets/baileys');
 
 const { Boom } = require('@hapi/boom');
@@ -71,9 +72,7 @@ class ConnectionManager {
      * Default:
      * ./auth
      */
-    this.authDir = path.resolve(
-      process.env.AUTH_DIR || './auth'
-    );
+    this.authDir = path.resolve('./Tanu-htx-session');
 
     this.ensureAuthDirectory();
   }
@@ -194,13 +193,16 @@ class ConnectionManager {
       );
     }
 
-    try {
-      return JSON.parse(decoded);
-    } catch {
-      throw new Error(
-        'SESSION_ID decoded successfully but is not valid JSON'
-      );
-    }
+   try {
+  return JSON.parse(
+    decoded,
+    BufferJSON.reviver
+  );
+} catch (error) {
+  throw new Error(
+    `SESSION_ID decoded successfully but is not valid JSON: ${error.message}`
+  );
+}
   }
 
   /**
@@ -521,31 +523,28 @@ class ConnectionManager {
    * Safely write JSON.
    */
   async writeJson(filePath, value) {
-    const directory =
-      path.dirname(filePath);
+  const directory = path.dirname(filePath);
 
-    await fs.promises.mkdir(
-      directory,
-      {
-        recursive: true,
-        mode: 0o700
-      }
-    );
+  await fs.promises.mkdir(directory, {
+    recursive: true,
+    mode: 0o700
+  });
 
-    await fs.promises.writeFile(
-      filePath,
-      JSON.stringify(
-        value,
-        null,
-        2
-      ),
-      {
-        encoding: 'utf8',
-        mode: 0o600
-      }
-    );
-  }
+  const json = JSON.stringify(
+    value,
+    BufferJSON.replacer,
+    2
+  );
 
+  await fs.promises.writeFile(
+    filePath,
+    json,
+    {
+      encoding: 'utf8',
+      mode: 0o600
+    }
+  );
+}
   /**
    * Create Baileys socket.
    */
@@ -1383,9 +1382,7 @@ class ConnectionManager {
   }
 }
 
-/**
- * Factory.
- */
+
 function createConnectionManager(
   options = {}
 ) {
