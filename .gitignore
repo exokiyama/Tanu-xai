@@ -10,20 +10,22 @@ target/
 
 # Dependencies
 node_modules/
-.venv/
-venv/
-.env
-.env.local
-.env.*
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 
-# Editors
+# Environment variables
+.env
+.env.local
+*.env.*
+
+# Editor/IDE files
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Coverage
 coverage/
