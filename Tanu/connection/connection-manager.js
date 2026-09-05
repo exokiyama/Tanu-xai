@@ -116,6 +116,80 @@ class ConnectionManager {
   }
 
   /**
+   * Restore SESSION_ID v2 by writing the original auth files byte-for-byte.
+   *
+   * This is intentionally NOT JSON.parse()/JSON.stringify().
+   * Baileys Signal keys are binary and must retain their exact on-disk
+   * BufferJSON representation.
+   */
+  async restoreRawAuthFiles(files) {
+    if (!files || typeof files !== 'object') {
+      throw new Error('SESSION_ID v2 is missing auth files');
+    }
+
+    let restored = 0;
+
+    for (const [relativeName, encoded] of Object.entries(files)) {
+      if (typeof encoded !== 'string' || !encoded) {
+        continue;
+      }
+
+      const normalized = String(relativeName).replace(/\\/g, '/');
+
+      if (
+        normalized !== 'creds.json' &&
+        !normalized.startsWith('keys/')
+      ) {
+        throw new Error(`Invalid SESSION_ID auth file path: ${relativeName}`);
+      }
+
+      const baseName = path.basename(normalized);
+      if (!baseName.endsWith('.json')) {
+        throw new Error(`Invalid SESSION_ID auth filename: ${relativeName}`);
+      }
+
+      const outputPath = path.join(this.authDir, normalized);
+      const outputDir = path.dirname(outputPath);
+
+      await fs.promises.mkdir(outputDir, {
+        recursive: true,
+        mode: 0o700
+      });
+
+      let raw;
+      try {
+        raw = Buffer.from(encoded, 'base64');
+      } catch (error) {
+        throw new Error(`Invalid base64 auth file: ${relativeName}`);
+      }
+
+      if (!raw.length) {
+        throw new Error(`Empty auth file in SESSION_ID: ${relativeName}`);
+      }
+
+      await fs.promises.writeFile(outputPath, raw, {
+        mode: 0o600
+      });
+
+      restored += 1;
+    }
+
+    const credsPath = path.join(this.authDir, 'creds.json');
+    if (!fs.existsSync(credsPath)) {
+      throw new Error('SESSION_ID v2 is missing creds.json');
+    }
+
+    if (restored < 1) {
+      throw new Error('SESSION_ID v2 did not contain any usable auth files');
+    }
+
+    log.info(
+      'WA',
+      `Restored ${restored} original Baileys auth files without re-serializing binary keys.`
+    );
+  }
+
+  /**
    * Decode Tanu-XAI~ session.
    *
    * Expected format:
@@ -193,16 +267,13 @@ class ConnectionManager {
       );
     }
 
-   try {
-  return JSON.parse(
-    decoded,
-    BufferJSON.reviver
-  );
-} catch (error) {
-  throw new Error(
-    `SESSION_ID decoded successfully but is not valid JSON: ${error.message}`
-  );
-}
+    try {
+      return JSON.parse(decoded, BufferJSON.reviver);
+    } catch (error) {
+      throw new Error(
+        `SESSION_ID decoded successfully but is not valid JSON: ${error.message}`
+      );
+    }
   }
 
   /**
@@ -240,6 +311,40 @@ class ConnectionManager {
     const payload = this.decodeSessionId(
       this.config.sessionId
     );
+
+    /*
+     * SESSION_ID v2:
+     *
+     * {
+     *   version: 2,
+     *   format: "tanu-xai-raw-multifile-auth",
+     *   files: {
+     *     "creds.json": "<base64 raw file>",
+     *     "keys/pre-key-....json": "<base64 raw file>"
+     *   }
+     * }
+     *
+     * Raw-file restore is the preferred format because it preserves
+     * Baileys' exact BufferJSON representation of Signal keys.
+     */
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      Number(payload.version) === 2 &&
+      payload.format === 'tanu-xai-raw-multifile-auth' &&
+      payload.files
+    ) {
+      await this.restoreRawAuthFiles(payload.files);
+
+      this.sessionPrepared = true;
+
+      log.info(
+        'WA',
+        'SESSION_ID v2 raw Baileys auth state restored successfully.'
+      );
+
+      return;
+    }
 
     /*
      * Complete auth payload:
@@ -832,13 +937,38 @@ class ConnectionManager {
 
       this.updateGlobalConnection();
 
+      const connectedAs =
+        this.user?.id ||
+        this.user?.name ||
+        'unknown';
+
       log.info(
         'WA',
-        `WhatsApp connected as ${
-          this.user?.id ||
-          this.user?.name ||
-          'unknown'
-        }`
+        '╔══════════════════════════════════════════════╗'
+      );
+      log.info(
+        'WA',
+        '║        ✨ TANU XAI — CONNECTED ✨            ║'
+      );
+      log.info(
+        'WA',
+        '╠══════════════════════════════════════════════╣'
+      );
+      log.info(
+        'WA',
+        `║  Status : ONLINE                             ║`
+      );
+      log.info(
+        'WA',
+        `║  User   : ${String(connectedAs).slice(0, 32).padEnd(32, ' ')} ║`
+      );
+      log.info(
+        'WA',
+        `║  Uptime : ${Math.floor((Date.now() - this.startedAt) / 1000)}s${' '.repeat(Math.max(0, 36 - String(Math.floor((Date.now() - this.startedAt) / 1000)).length))} ║`
+      );
+      log.info(
+        'WA',
+        '╚══════════════════════════════════════════════╝'
       );
 
       return;
