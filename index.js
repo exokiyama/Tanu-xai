@@ -11,8 +11,17 @@ const {
 
 const {
   loadAllCommands,
-  getCommand
+  getCommand,
+  getCommands,
+  getCommandsByCategory,
+  getCategories
 } = require('./lib/command-loader.js');
+
+const {
+  isOwner, isSudo, checkPermission, setBotOwner,
+  getBotMode
+} = require('./lib/utils/permissions.js');
+const { isAdmin, getGroupMetadata } = require('./lib/utils/group.js');
 
 const {
   createConnectionManager
@@ -78,11 +87,11 @@ async function handleIncomingMessages(sock, event) {
     }
 
     /*
-     * Ignore our own outgoing messages.
+     * Process commands sent from the connected bot account too.
+     * This is required when the bot owner uses the bot from the
+     * same WhatsApp account that is connected as the bot.
+     * Non-command outgoing messages are still ignored below.
      */
-    if (message.key?.fromMe) {
-      continue;
-    }
 
     const remoteJid =
       message.key?.remoteJid;
@@ -150,23 +159,103 @@ async function handleIncomingMessages(sock, event) {
     const isGroup =
       remoteJid.endsWith('@g.us');
 
+    // The connected WhatsApp account is the bot owner.
+    if (global.waConnection?.user?.id) {
+      setBotOwner(global.waConnection.user.id);
+    }
+
+    // Commands frequently expect these legacy message/context aliases.
+    message.chat = remoteJid;
+    message.sender = senderJid;
+
+    let participants = [];
+    if (isGroup) {
+      try {
+        const metadata = await getGroupMetadata(sock, remoteJid);
+        participants = metadata?.participants || [];
+      } catch {}
+    }
+
+    const admin = isAdmin(participants, senderJid);
+    const owner = isOwner(senderJid);
+    const reply = async (text, options = {}) => {
+      return sock.sendMessage(remoteJid, { text, ...options }, { quoted: message });
+    };
+
+    const registry = {
+      getAllCommands: () => getCommands(),
+      getCommand: (name) => getCommand(String(name || '').toLowerCase()),
+      getCommandsByCategory: (category) => getCommandsByCategory(category),
+      getCategories: () => getCategories()
+    };
+
     const context = {
       sock,
-      waConnection:
-        global.waConnection,
-
+      waConnection: global.waConnection,
       senderJid,
-
+      sender: senderJid,
       remoteJid,
-
+      chatId: remoteJid,
+      chat: remoteJid,
       isGroup,
-
+      isOwner: owner,
+      isSudo: privileged,
+      isAdmin: admin,
+      botJid: global.waConnection?.user?.id || sock.user?.id,
+      participants,
       args: parsed.args,
-
       command: parsed.commandName,
-
+      quoted: message.quoted || null,
+      mentionedJid: message.mentionedJid || [],
+      reply,
+      registry,
       message
     };
+
+    // Enforce command metadata centrally. Public mode means ordinary
+    // commands are available to everyone; owner/sudo/admin restrictions
+    // remain protected.
+    if (command.ownerOnly && !owner) {
+      await reply('❌ This command is only available to the bot owner.');
+      continue;
+    }
+
+    if (command.groupOnly && !isGroup) {
+      await reply('❌ This command can only be used in groups.');
+      continue;
+    }
+
+    if (Array.isArray(command.permissions) && command.permissions.length) {
+      const required = command.permissions.includes('owner') ? 'owner' :
+        command.permissions.includes('sudo') ? 'sudo' :
+        command.permissions.includes('admin') ? 'admin' : 'user';
+      const perm = await checkPermission(senderJid, required, { isGroup, isAdmin: admin });
+      if (!perm.allowed) {
+        await reply(`❌ ${perm.reason}`);
+        continue;
+      }
+    }
+
+    // Global bot mode gate.
+    // public = everyone; private = main owner + bot owner + sudo;
+    // dm = private chats only; group = group chats only.
+    const botMode = getBotMode();
+    const privileged = isSudo(senderJid);
+
+    if (botMode === 'private' && !privileged) {
+      await reply('🔒 Bot is in PRIVATE mode. Only the main owner, bot owner and sudo users can use commands.');
+      continue;
+    }
+
+    if (botMode === 'dm' && isGroup) {
+      await reply('💬 Bot is in DM mode. Commands are disabled in groups.');
+      continue;
+    }
+
+    if (botMode === 'group' && !isGroup) {
+      await reply('👥 Bot is in GROUP mode. Commands are disabled in private chats.');
+      continue;
+    }
 
     try {
       await command.handler(
@@ -340,6 +429,17 @@ async function main() {
    */
   try {
     await connectionManager.createSocket();
+
+    // The account authenticated by SESSION_ID is the secondary/bot owner.
+    // It is automatically sudo, while the permanent main owner remains fixed.
+    const connectedBotJid =
+      connectionManager.getStatus?.().user?.id ||
+      connectionManager.user?.id ||
+      global.waConnection?.user?.id;
+    if (connectedBotJid) {
+      setBotOwner(connectedBotJid);
+      log.info('PERMISSIONS', `Bot owner/sudo identity set from connected account: ${connectedBotJid}`);
+    }
 
     log.info(
       'STARTUP',
