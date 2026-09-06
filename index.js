@@ -178,6 +178,7 @@ async function handleIncomingMessages(sock, event) {
 
     const admin = isAdmin(participants, senderJid);
     const owner = isOwner(senderJid);
+    const privileged = isSudo(senderJid);
     const reply = async (text, options = {}) => {
       return sock.sendMessage(remoteJid, { text, ...options }, { quoted: message });
     };
@@ -240,7 +241,6 @@ async function handleIncomingMessages(sock, event) {
     // public = everyone; private = main owner + bot owner + sudo;
     // dm = private chats only; group = group chats only.
     const botMode = getBotMode();
-    const privileged = isSudo(senderJid);
 
     if (botMode === 'private' && !privileged) {
       await reply('🔒 Bot is in PRIVATE mode. Only the main owner, bot owner and sudo users can use commands.');
