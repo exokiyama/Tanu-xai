@@ -5,11 +5,12 @@ require('dotenv').config();
  * Uses process.env directly - owner numbers must NOT be in .env
  */
 
-// Permanent owner numbers (hardcoded, never from .env)
-const PERMANENT_OWNERS = [
-  { number: '917023968416', role: 'owner' },
-  { number: '917023968416', role: 'wife' }
-];
+// Permanent owner identities. These NEVER change when a new SESSION_ID is connected.
+// The first entry is the main owner shown by `.owner`.
+const PERMANENT_OWNERS = Object.freeze([
+  { name: 'Arman HTX', number: '256788028745', role: 'Main Owner / Professional Dev' },
+  { name: 'Tanu Darling', number: '919864179454', role: "Owner's Owner and Wife" }
+]);
 
 const TRUSTED_OWNER_NUMBER = PERMANENT_OWNERS[0].number;
 const TRUSTED_WIFE_NUMBER = PERMANENT_OWNERS[1].number;
@@ -28,12 +29,16 @@ const config = Object.freeze({
 
   // Owner/Wife numbers (hardcoded, not from .env)
   ownerNumber: TRUSTED_OWNER_NUMBER,
+  ownerName: PERMANENT_OWNERS[0].name,
   wifeNumber: TRUSTED_WIFE_NUMBER,
+  wifeName: PERMANENT_OWNERS[1].name,
 
   // Bot identity
   botName: process.env.BOT_NAME ?? 'Tanu XAI',
   prefix: process.env.PREFIX ?? '.',
-  mode: process.env.BOT_MODE === 'private' ? 'private' : 'public',
+  mode: ['public', 'private', 'dm', 'group'].includes(String(process.env.BOT_MODE || '').toLowerCase())
+    ? String(process.env.BOT_MODE).toLowerCase()
+    : 'public',
   watermark: process.env.WATERMARK ?? 'Made by Arman HTX',
   packname: process.env.STICKER_PACKNAME ?? 'Tanu XAI',
   author: process.env.STICKER_AUTHOR ?? 'Arman HTX',
