@@ -1,13 +1,11 @@
 node_modules
-dist
 .git
 .env
 .env.*
+Tanu-htx-session
 auth
-auth_info_baileys
 session
 sessions
-credentials
-data
-*.session
-npm-debug.log
+tmp
+npm-debug.log*
+Dockerfile

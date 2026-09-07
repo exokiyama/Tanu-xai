@@ -18,7 +18,7 @@ const {
 } = require('./lib/command-loader.js');
 
 const {
-  isOwner, isSudo, checkPermission, setBotOwner,
+  isOwner, isSudo, checkPermission, setBotOwner, loadSudoUsers,
   getBotMode
 } = require('./lib/utils/permissions.js');
 const { isAdmin, getGroupMetadata } = require('./lib/utils/group.js');
@@ -26,6 +26,9 @@ const { isAdmin, getGroupMetadata } = require('./lib/utils/group.js');
 const {
   createConnectionManager
 } = require('./Tanu/connection/connection-manager.js');
+const reportScheduler = require('./lib/report/scheduler.js');
+const reportGenerator = require('./lib/report/generator.js');
+const { rememberChat } = require('./lib/utils/chat-registry.js');
 
 const {
   extractText
@@ -96,6 +99,8 @@ async function handleIncomingMessages(sock, event) {
     const remoteJid =
       message.key?.remoteJid;
 
+    rememberChat(remoteJid, { isGroup: remoteJid.endsWith('@g.us'), pushName: message.pushName || '' });
+
     if (!remoteJid) {
       continue;
     }
@@ -117,6 +122,19 @@ async function handleIncomingMessages(sock, event) {
 
     const text =
       extractText(message);
+
+    const incomingSenderJid = message.key?.participant || message.key?.remoteJid || remoteJid;
+    const incomingIsGroup = remoteJid.endsWith('@g.us');
+    reportGenerator.storeMessage({
+      timestamp: new Date(),
+      senderJid: incomingSenderJid,
+      senderName: message.pushName || incomingSenderJid.split('@')[0] || 'Unknown',
+      messageType: message.message?.conversation ? 'text' : (message.message?.imageMessage ? 'image' : message.message?.videoMessage ? 'video' : message.message?.audioMessage ? 'audio' : 'unknown'),
+      content: text || '',
+      caption: message.message?.imageMessage?.caption || message.message?.videoMessage?.caption || '',
+      groupId: incomingIsGroup ? remoteJid : null,
+      groupName: null
+    });
 
     if (!text) {
       continue;
@@ -264,6 +282,18 @@ async function handleIncomingMessages(sock, event) {
         parsed.args,
         context
       );
+
+      // Command statistics are persisted in PostgreSQL; failures here never break commands.
+      try {
+        if (dbConnect && require('./lib/database/index.js').is_connected()) {
+          await require('./lib/database/index.js').query(
+            'INSERT INTO command_usage (command_name, sender_jid, chat_id, group_id, is_group) VALUES ($1, $2, $3, $4, $5)',
+            [command.name, senderJid, remoteJid, isGroup ? remoteJid : null, isGroup]
+          );
+        }
+      } catch (reportError) {
+        log.warn('REPORT', `Could not record command usage: ${reportError.message}`);
+      }
     } catch (error) {
       log.error(
         'COMMAND',
@@ -355,6 +385,14 @@ async function main() {
       'DB',
       'Database connection established'
     );
+
+    const loadedSudos = await loadSudoUsers();
+    log.info('PERMISSIONS', `Loaded ${loadedSudos} persisted sudo users`);
+
+    if (config.dailyReportEnabled) {
+      await reportScheduler.initialize();
+      log.info('REPORT', 'Daily report scheduler initialized');
+    }
   } catch (error) {
     log.warn(
       'DB',
@@ -476,6 +514,12 @@ async function shutdown(signal) {
     'SHUTDOWN',
     `Received ${signal}. Shutting down...`
   );
+
+  try {
+    reportScheduler.stop();
+  } catch (error) {
+    log.error('SHUTDOWN', `Report scheduler shutdown error: ${error.message}`);
+  }
 
   try {
     if (connectionManager) {
